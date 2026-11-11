@@ -125,6 +125,7 @@ Without `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` set, a local file store under `s
 
 ## Limitations / honest caveats
 
+- **Cron schedules may not register on first push.** GitHub has a known quirk where newly pushed scheduled workflows silently never trigger (manual `workflow_dispatch` still works). Workaround: any small push touching the workflow files re-registers them — see the `# schedules re-registered` comment commit. If `Actions` shows zero schedule-triggered runs, push a trivial commit to `main` and wait for the next UTC cron window.
 - **Cron is best-effort.** Telegram delivery can lag a few minutes behind the 15-minute schedule (GitHub delays scheduled workflows under load). It is not real-time.
 - **One `getUpdates` consumer only.** Never set a webhook for this bot (`setWebhook`) or the Subscribe workflow will receive nothing.
 - **Public repo inactivity.** GitHub disables scheduled workflows after 60 days without repository activity — the monthly `keepalive` workflow (commits `data/heartbeat.txt`) prevents that.
