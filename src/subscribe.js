@@ -23,7 +23,7 @@ async function main() {
     process.exit(2);
   }
 
-  const store = createStore();
+  const store = await createStore();
   console.log(`[subscribe] state backend: ${store.backend}`);
 
   const offset = Number(await store.getJSON(OFFSET_KEY, 0)) || 0;

@@ -60,7 +60,7 @@ async function main() {
   }
 
   const shards = shard === 'all' ? ['a', 'b'] : [shard];
-  const store = createStore();
+  const store = await createStore();
   console.log(`[notify] state backend: ${store.backend}`);
 
   // Subscribers are shared between shards; read once, write once if pruned.

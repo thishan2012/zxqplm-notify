@@ -1,6 +1,6 @@
 # OutageNotifyBot 🚨
 
-Telegram bot that tells you **only when a major outage happens** — across 20 services — with **no server to host**. GitHub Actions is the runtime; state lives in a tiny free Upstash Redis database.
+Telegram bot that tells you **only when a major outage happens** — across 20 services — with **no server to host**. GitHub Actions is the runtime; state lives in a tiny free Turso (libSQL / SQLite) database.
 
 Every 15 minutes two workflows (shards A and B) fetch each service's status feed (RSS / Atom / JSON), compare against the last-seen incident ids stored in the database, and send a Telegram message to everyone subscribed to an affected service. Bot commands (`/start`, `/subscribe github`, …) are processed by a separate polling workflow that calls `getUpdates`.
 
@@ -17,7 +17,7 @@ Every 15 minutes two workflows (shards A and B) fetch each service's status feed
 └─────────┬───────────────┘
           │ fetch feeds            │ get/set JSON
           ▼                        ▼
-   20 status feeds          Upstash Redis (free)
+   20 status feeds          Turso libSQL DB (free)
    (RSS/Atom/JSON)          ├─ subscribers      {all:[...], services:{github:[...], ...}}
                             ├─ seen:<serviceId> [last 100 incident ids]
                             ├─ tg_offset        last processed update id
@@ -61,10 +61,15 @@ First run of each feed **bootstraps silently** — existing incidents are record
 1. Open [@BotFather](https://t.me/BotFather) → `/newbot` → follow the prompts.
 2. Copy the token (looks like `123456:ABC-DEF...`). This is `TELEGRAM_BOT_TOKEN`.
 
-### 2. Create the state database (Upstash Redis, free)
-1. Sign up at [console.upstash.com](https://console.upstash.com) (no card required).
-2. Create a Redis database (any region; free tier is 10k commands/day — this project uses ~a few hundred).
-3. Open the database → **REST API** → copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+### 2. Create the state database (Turso, free)
+1. Sign up at [turso.tech](https://turso.tech) (free tier, no card required).
+2. Create a database named e.g. `outagenotifybot`:
+   - **CLI:** `turso db create outagenotifybot`
+   - **Or:** create it from the dashboard at [app.turso.tech](https://app.turso.tech).
+3. Copy the two values:
+   - Database URL — `turso db show --url outagenotifybot` (looks like `libsql://outagenotifybot-....turso.io`)
+   - Auth token — `turso db tokens create outagenotifybot`
+4. No schema setup needed — the `kv` table is created automatically on first run.
 
 > Privacy: subscribers' chat IDs live in **your** database, not in this (public) repo.
 
@@ -74,8 +79,8 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 | Secret | Value |
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | from step 1 |
-| `UPSTASH_REDIS_REST_URL` | from step 2 |
-| `UPSTASH_REDIS_REST_TOKEN` | from step 2 |
+| `TURSO_DATABASE_URL` | from step 2 |
+| `TURSO_AUTH_TOKEN` | from step 2 |
 
 ### 4. Verify the feeds
 Repo → **Actions → Smoke Feeds → Run workflow**. Every line should print ✅. Fix any ❌ by editing `src/services.js` (the ⚠️ "verify" feeds are the most likely to move). The smoke run sends **no** alerts.
@@ -102,13 +107,13 @@ Subscriptions are processed by the **Subscribe** workflow, so allow up to ~5 min
 
 ```bash
 npm install
-npm test                 # 21 unit tests, no network needed
+npm test                 # 22 unit tests, no network needed
 node src/smoke.js        # check feeds (needs real network access)
 node src/notify.js --shard=a --dry-run
 node src/subscribe.js --dry-run
 ```
 
-Without `UPSTASH_REDIS_REST_URL`/`_TOKEN` set, a local file store under `state/*.local.json` is used instead of Redis (git-ignored). Copy `.env.example` to `.env` if you have real credentials locally.
+Without `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` set, a local file store under `state/*.local.json` is used instead (git-ignored, override dir with `STATE_DIR`). Copy `.env.example` to `.env` if you have real credentials locally.
 
 ## Configuration
 
@@ -139,7 +144,7 @@ src/
   subscribe.js   getUpdates poller — handles /commands
   smoke.js       feed health check (no alerts)
   telegram.js    minimal Bot API client
-  db.js          Upstash REST backend + local file fallback
+  db.js          Turso (libSQL) backend + local file fallback
 .github/workflows/
   notify-a.yml   every 15 min, services 1–10
   notify-b.yml   every 15 min, services 11–20
