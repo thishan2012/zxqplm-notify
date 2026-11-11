@@ -20,8 +20,8 @@ import { createClient } from '@libsql/client';
 const KV_SCHEMA = 'CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL)';
 
 function tursoConfig() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+  const url = process.env.TURSO_DATABASE_URL?.trim().replace(/\/+$/, '');
+  const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
   if (url && authToken) return { url, authToken };
   return null;
 }

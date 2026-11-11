@@ -83,7 +83,7 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 | `TURSO_AUTH_TOKEN` | from step 2 |
 
 ### 4. Verify the feeds
-Repo → **Actions → Smoke Feeds → Run workflow**. Every line should print ✅. Fix any ❌ by editing `src/services.js` (the ⚠️ "verify" feeds are the most likely to move). The smoke run sends **no** alerts.
+Repo → **Actions → Smoke Feeds → Run workflow**. The run first does a **Turso connection check** (exact host, token shape and a read/write ping — exits fast with an actionable message if your credentials are off), then every feed line should print ✅. Fix any ❌ by editing `src/services.js` (the ⚠️ "verify" feeds are the most likely to move). The smoke run sends **no** alerts.
 
 ### 5. Bootstrap (important)
 Run **Notify A** and **Notify B** once via **Run workflow**. The first run records existing incidents silently — that's what prevents alert spam on day one.
