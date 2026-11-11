@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Example Status</title>
+    <link>https://examplestatus.com/</link>
+    <description>Status page</description>
+    <item>
+      <title>Major Service Outage with Git Operations</title>
+      <description>We are investigating a major outage affecting git push and pull operations.</description>
+      <pubDate>Tue, 11 Nov 2026 08:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://examplestatus.com/incidents/abc123</guid>
+      <link>https://examplestatus.com/incidents/abc123</link>
+    </item>
+    <item>
+      <title>Scheduled Maintenance on Search</title>
+      <description>Planned maintenance, no action required.</description>
+      <pubDate>Mon, 10 Nov 2026 02:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://examplestatus.com/incidents/def456</guid>
+      <link>https://examplestatus.com/incidents/def456</link>
+    </item>
+  </channel>
+</rss>

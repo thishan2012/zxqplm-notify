@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example Status</title>
+  <link href="https://examplestatus.com/"/>
+  <entry>
+    <id>https://examplestatus.com/incidents/xyz789</id>
+    <title type="html">Critical disruption with Edge Network</title>
+    <summary>We are experiencing a critical disruption across the edge network.</summary>
+    <updated>2026-11-10T12:00:00Z</updated>
+    <link rel="alternate" type="text/html" href="https://examplestatus.com/incidents/xyz789"/>
+  </entry>
+  <entry>
+    <id>https://examplestatus.com/incidents/info001</id>
+    <title type="html">Informational notice</title>
+    <summary>A routine advisory, nothing broken.</summary>
+    <updated>2026-11-09T12:00:00Z</updated>
+    <link rel="alternate" type="text/html" href="https://examplestatus.com/incidents/info001"/>
+  </entry>
+</feed>
