@@ -21,6 +21,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Raw Turso probe (prints server error body, no alerts sent)
+        run: node src/db-raw.js
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+
       - name: Check Turso state store (no alerts sent)
         run: node src/db-check.js
         env:
