@@ -1,0 +1,19 @@
+{
+  "name": "zxqplm-notify",
+  "version": "1.0.0",
+  "description": "Telegram outage notifier bot — checks status RSS/Atom feeds of 20 services every 15 minutes via GitHub Actions and pings subscribers only when a major outage happens. No server required.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "notify": "node src/notify.js",
+    "subscribe": "node src/subscribe.js",
+    "smoke": "node src/smoke.js"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0"
+  },
+  "license": "MIT"
+}
