@@ -1,14 +1,11 @@
-# schedules re-registered 2026-11-11 (GitHub scheduler re-registration workaround)
-name: Subscribe — process bot commands
+# BACKUP ONLY — normally the always-on daemon (src/daemon.js, e.g. on FPS.ms)
+# handles bot commands with seconds-level latency. Run this manually ONLY if the
+# daemon host is down: both consumers call getUpdates, so running this while the
+# daemon is up will swallow updates / double-reply.
+name: Subscribe — BACKUP (daemon normally handles commands)
 
 on:
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
-
-concurrency:
-  group: subscribe
-  cancel-in-progress: false
 
 permissions:
   contents: read

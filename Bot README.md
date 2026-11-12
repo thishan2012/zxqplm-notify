@@ -101,7 +101,47 @@ Open your bot in Telegram:
 | `/myservices` | See your subscriptions |
 | `/stop` | Unsubscribe from everything |
 
-Subscriptions are processed by the **Subscribe** workflow, so allow up to ~5 minutes for them to take effect.
+Subscriptions are processed either by the always-on daemon (host deployment — see below, seconds) or by the backup **Subscribe** workflow (up to ~15 min). Use only one of them at a time.
+
+## Hybrid deployment (recommended): commands on a host, outages on Actions
+
+**Architecture:** one free bot host runs the command poller (instant `/start` replies, ~seconds), GitHub Actions keeps checking the 20 feeds on its cron (no server needed). Both share the **same Turso database**: the host writes `subscribers`/`tg_offset`, Actions writes `seen:*`/stats — no conflicts in practice.
+
+Memory footprint is tiny (~30–60 MB) — even the smallest free tier (128 MB) is enough.
+
+```text
+FPS.ms (node daemon.js)                GitHub Actions (cron)
+┌──────────────────────────┐           ┌──────────────────────────┐
+│ poll getUpdates every 3s │           │ notify-a  */15min        │
+│ /start /subscribe …      │           │ notify-b  */15min        │
+│ writes subscribers/offset│           │ writes seen:*, stats:*   │
+└──────────┬───────────────┘           └──────────┬───────────────┘
+           │                                      │
+           └──────────────► Turso DB ◄────────────┘
+```
+
+### Setup on FPS.ms (or Wisure / any Node host)
+1. Create an account → create a **Node.js server** (smallest free plan is fine).
+2. Deploy this repo: either clone it via the panel's git option (`https://github.com/thishan2012/zxqplm-notify.git`) or upload the repo as a zip.
+3. Set the **environment variables** in the panel (Startup/Variables):
+
+   | Variable | Value |
+   |---|---|
+   | `TELEGRAM_BOT_TOKEN` | your BotFather token |
+   | `TURSO_DATABASE_URL` | same value as the GitHub secret |
+   | `TURSO_AUTH_TOKEN` | same value as the GitHub secret |
+   | `ROLES` | `commands` |
+   | `POLL_INTERVAL_SECONDS` | `3` |
+
+4. Make sure the start command is `npm start` (it runs `node src/daemon.js`). The panel's `npm install` step will pull `@libsql/client` and `fast-xml-parser`.
+5. Click **Start**. You should see: `[daemon] roles: commands — commands poll every 3s; feeds every 15m`.
+
+### What to keep / disable in GitHub Actions afterwards
+- **Keep:** `Notify A`, `Notify B`, `Smoke Feeds`, `Keepalive`.
+- **Subscribe workflow is now backup-only** (manual `workflow_dispatch`) — never run it while the daemon is up; both call `getUpdates` and would steal/double-process messages.
+- If instead you want EVERYTHING on the host (no Actions at all): set `ROLES=all` and disable `Notify A`, `Notify B` too — the daemon checks the feeds itself (`FEED_CHECK_MINUTES`, default 15).
+
+> Note: on the host there is no 6-hour job limit — that's a single-job cap in GitHub Actions, irrelevant here. Also note GitHub's own cron can be delayed/coalesced heavily (hours), which is exactly why the command side belongs on an always-on host.
 
 ## Local development
 
@@ -141,15 +181,18 @@ src/
   feeds.js       fetch + parse RSS/Atom/Google Cloud JSON, major-outage filter
   subscribers.js DB record shapes, diff/merge of seen ids
   commands.js    pure bot-command handler (unit-tested)
-  notify.js      shard runner — diffs feeds, alerts subscribers
-  subscribe.js   getUpdates poller — handles /commands
+  checker.js     shared feed-checking logic (notify + daemon)
+  poller.js      shared getUpdates logic (subscribe + daemon)
+  notify.js      one-shot shard runner (GitHub Actions entry)
+  subscribe.js   one-shot getUpdates pass (backup CLI for subscribe.yml)
+  daemon.js      long-running process (bot host; ROLES=commands|feeds|all)
   smoke.js       feed health check (no alerts)
   telegram.js    minimal Bot API client
   db.js          Turso (libSQL) backend + local file fallback
 .github/workflows/
   notify-a.yml   every 15 min, services 1–10
   notify-b.yml   every 15 min, services 11–20
-  subscribe.yml  every 5 min, bot commands
+  subscribe.yml  BACKUP only, manual trigger (daemon normally handles commands)
   smoke.yml      manual feed verification
   keepalive.yml  monthly heartbeat (public-repo scheduled-workflow safety net)
 test/            node:test unit tests + fixtures (RSS/Atom/JSON)

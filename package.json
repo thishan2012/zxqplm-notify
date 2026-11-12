@@ -10,7 +10,8 @@
     "test": "node --test test/*.test.js",
     "notify": "node src/notify.js",
     "subscribe": "node src/subscribe.js",
-    "smoke": "node src/smoke.js"
+    "smoke": "node src/smoke.js",
+    "start": "node src/daemon.js"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
